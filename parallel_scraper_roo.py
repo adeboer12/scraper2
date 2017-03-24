@@ -8,13 +8,13 @@ import multiprocessing
 import shutil
 import subprocess
 import glob
-sys.path.insert(0, '/home/mgardner/scraper2/scraper2')
-import scraper2
+sys.path.insert(0, '/Users/anniedbr/Desktop/scraper2')
+import roodata_modified
 
 # add subfolder to system path
 
 domains = []
-with open('/home/mgardner/scraper2/domains_roo.txt', 'rb') as f:
+with open('/Users/anniedbr/Desktop/scraper2/domains_roo.txt', 'rb') as f:
     for line in f.readlines():
         domains.append((line.strip()))
 
@@ -30,12 +30,12 @@ jobs = []
 
 st_time = time.time()
 for domain in domains:
-    s = shared_scraper2.RentalListingScraper(    #is ours RentalListingScraper?
+    s = roodata_modified.RentalListingScraper(    #is ours RentalListingScraper?
         domains=[domain],
         earliest_ts=earliest_ts,
         latest_ts=latest_ts,
         fname_ts=ts)
-    print 'Starting process for ' + domain
+    print ('Starting process for ' + domain)
     p = multiprocessing.Process(target=s.run)
     jobs.append(p)
     p.start()
@@ -52,14 +52,14 @@ for i, job in enumerate(jobs):
     print("About {0} seconds left.".format(time_left))
 
 # archive the data and delete the raw files
-print("Archiving data.")
+# print("Archiving data.")
 
-shutil.make_archive('/home/mgardner/scraper2/archives/rental_listings-' + ts,
-                    'zip', '/home/mgardner/scraper2/data')
-[os.remove(x) for x in glob.glob("/home/mgardner/scraper2/data/*" +
-                                 ts + ".csv")]
+# shutil.make_archive('/home/mgardner/scraper2/archives/rental_listings-' + ts,
+#                     'zip', '/home/mgardner/scraper2/data')
+# [os.remove(x) for x in glob.glob("/home/mgardner/scraper2/data/*" +
+#                                  ts + ".csv")]
 
-# run the sync script to send the archive to box, delete local copy of archive
-p = subprocess.Popen(['. /home/mgardner/scraper2/sync_data.sh'], shell=True,
-                     stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-print("Done.")
+# # run the sync script to send the archive to box, delete local copy of archive
+# p = subprocess.Popen(['. /home/mgardner/scraper2/sync_data.sh'], shell=True,
+#                      stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+# print("Done.")
