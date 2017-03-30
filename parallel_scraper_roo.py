@@ -8,29 +8,29 @@ import multiprocessing
 import shutil
 import subprocess
 import glob
-sys.path.insert(0, '/Users/anniedbr/Desktop/scraper2')
-import roodata_modified
+sys.path.insert(0, './shared_room_scraper')
+import roodata_to_database
 
 # add subfolder to system path
 
 domains = []
-with open('/Users/anniedbr/Desktop/scraper2/domains_roo.txt', 'rb') as f:
+with open('./domains_roo.txt', 'rb') as f:
     for line in f.readlines():
         domains.append((line.strip()))
 
-# domains = ['http://losangeles.craigslist.org/search/apa']
+domains = ['http://losangeles.craigslist.org/search/roo']
 
-lookback = 1  # hours
+lookback = 2  # hours
 
 earliest_ts = dt.now() - timedelta(hours=lookback)
-latest_ts = dt.now() + timedelta(hours=0)
+latest_ts = dt.now() + timedelta(hours=1)
 ts = dt.now().strftime('%Y%m%d-%H%M%S')
 
 jobs = []
 
 st_time = time.time()
 for domain in domains:
-    s = roodata_modified.RentalListingScraper(    #is ours RentalListingScraper?
+    s = roodata_to_database.RentalListingScraper(    #is ours RentalListingScraper?
         domains=[domain],
         earliest_ts=earliest_ts,
         latest_ts=latest_ts,
