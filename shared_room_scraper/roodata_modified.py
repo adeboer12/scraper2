@@ -2,9 +2,9 @@
 # coding: utf-8
 
 # # Shared Room Scraper
-# This notebook implements a variation on the scraper2.py that scrapes shared listings rather than apartments/hohusing rental listings. This is a project of the Urban Analytics Lab at UC Berkeley. In order to run this file, the user needs to define a private 'settings.json' file in the directory of the code. This file contains the credentials for the database host, name, and password.
+# This notebook implements a variation on the scraper2.py that scrapes shared listings rather than apartments/hohusing rental listings. This is a project of the Urban Analytics Lab at UC Berkeley.
 
-# In[ ]:
+# In[2]:
 
 #Import required packages
 from datetime import datetime as dt
@@ -21,20 +21,16 @@ import json
 import sys
 from requests.auth import HTTPProxyAuth
 import time
-import psycopg2
-pd.set_option('display.float_format', lambda x: '%.3f' % x) #describe() vars are not in scientific notation
-pd.set_option('max_columns', 30)
+#import psycopg2
+#import syslog
+#import shutil
+#import os
+#import glob
+#import subprocess
+#from __future__ import division
 
 
-# In[ ]:
-
-#For Database
-# Read in credentials from private settings file
-# with open('settings.json') as settings_file:    
-#     settings = json.load(settings_file)
-
-
-# In[ ]:
+# In[14]:
 
 #charity, proxy, s, sessions variables are associated with the charity engine
 #Try to run this with San Francisco
@@ -43,14 +39,13 @@ DOMAINS = []
 #Craigslist doesn't use time zones in its timestamps, so these cutoffs will be
 #interpreted relative to the local time at the listing location. For example, dt.now()
 #run from a machine in San Francisco will match listings from 3 hours ago in Boston.
-LATEST_TS = dt.now() - timedelta(hours=1)  #lagged lookback to account for the delay we're getting in our results
-EARLIEST_TS = LATEST_TS - timedelta(hours=2)
+LATEST_TS = dt.now()
+EARLIEST_TS = LATEST_TS - timedelta(hours=.5)
 
 
-OUT_DIR = "./shared_room_scraper/data/" #Istanbul directory
 #OUT_DIR ="C:\\Users\\james\\Documents\\Berkeley_Docs\\Spring_17_Courses\\CP290 Data Lab\\scraper_output\\" #James's directory
 #OUT_DIR ="C:\\Users\\varun\\Documents\\Berkeley\\2017 Spring\\Workshop\\Datasets\\data_output\\" #Varun's directory
-#OUT_DIR ='/Users/anniedbr/Desktop/CSV/'  #Annie's directory
+OUT_DIR ='/Users/anniedbr/Desktop/CSV/'  #Annie's directory
 #OUT_DIR ='../../Scraped Listings/'  #Brian's directory
 
 FNAME_BASE = 'data'  # filename prefix for saved data
@@ -83,13 +78,15 @@ class RentalListingScraper(object):
         self.ts = dt.now().strftime('%Y%m%d-%H%M%S')  # Use timestamp as file id
         #self.ts = fname_ts
 
-        log_fname = "./shared_room_scraper/logs/" + self.fname_base + (self.ts if self.fname_ts else '') + '.log'
+        log_fname = self.out_dir + self.fname_base                 + (self.ts if self.fname_ts else '') + '.log'
         
-        #importlib.reload(logging)
+        importlib.reload(logging)
         
         logging.basicConfig(filename=log_fname, level=logging.INFO)
-       
 
+        
+    
+        
         
     def _get_str(self, list):
         '''
@@ -149,17 +146,17 @@ class RentalListingScraper(object):
             sqft = 0
         else:
             bedsqft = housing_raw[0]
+            #beds = self._get_int_prefix(bedsqft, "br")  # appears as "1br" to "8br" or missing
             sqft = self._get_int_prefix(bedsqft, "ft")  # appears as "000ft" or missing
 
         return [pid, dt, url, title, price, neighb, sqft]
 
     
-
+    
     def PageBodyText(self, session, url, proxy=True):
         #this grabs the entire XML structured text from each post, then cleans it a bit.  
         
-        s = session
-        #page = requests.get(url)        
+        s = session       
         page = s.get(url, timeout=30, verify=False)
         tree = html.fromstring(page.content)
         path = tree.xpath('//section[@id="postingbody"]')[0]
@@ -181,14 +178,13 @@ class RentalListingScraper(object):
         #     s.auth = HTTPProxyAuth(authenticator,'') 
 
         page = s.get(url, timeout=30, verify=False)
-        #page = requests.get(url)
         tree = html.fromstring(page.content)
        
         map = tree.xpath('//div[@id="map"]')
 
         # Sometimes there's no location info, and no map on the page        
         if len(map) == 0:
-            return [99, 99, 99]
+            return ['', '','']
 
         map = map[0]
         lat = map.xpath('@data-latitude')[0]
@@ -196,7 +192,7 @@ class RentalListingScraper(object):
         
         
         accuracy = map.xpath('@data-accuracy')[0]
-
+        
         return [lat, lng, accuracy]
    
     def PageAttributes(self, session, url, proxy=True):   
@@ -206,7 +202,7 @@ class RentalListingScraper(object):
         
         s = session
          
-        page = s.get(url, timeout=30, verify=False)  
+        page = s.get(url, timeout=30, verify=False)        
         tree = html.fromstring(page.content)
         
         attrs  = tree.xpath('/html/body/section/section/section/div[1]/p[2]/span') 
@@ -287,9 +283,15 @@ class RentalListingScraper(object):
         else:
              parking_onsite = 'FALSE'
 
+
         return [furnished, laundry_known, laundry_onpremises, laundry_inunit, room_known, private_room, bath_known, private_bath, parking_known, parking_onsite]    
-     
+
+
+
+
+
     def _get_fips(self, row):
+
         url = 'http://data.fcc.gov/api/block/find?format=json&latitude={}&longitude={}'
         request = url.format(row['latitude'], row['longitude'])
         # TO DO: exception handling
@@ -297,86 +299,65 @@ class RentalListingScraper(object):
         data = response.json()
         return pd.Series({'fips_block':data['Block']['FIPS'], 'state':data['State']['code'], 'county':data['County']['name']})
 
+
     def _clean_listings(self, filename):
 
-            converters = {'neighb':str, 
-                  'title':str, 
-                  'price':self._toFloat, 
-                  'pid':str, 
-                  'dt':str, 
-                  'url':str, 
-                  'sqft':self._toFloat, 
-                  'lng':self._toFloat, 
-                  'lat':self._toFloat}
+        converters = {'neighb':str, 
+              'title':str, 
+              'price':self._toFloat, 
+              'pid':str, 
+              'dt':str, 
+              'url':str, 
+              'sqft':self._toFloat, 
+              'lng':self._toFloat, 
+              'lat':self._toFloat}
 
-            all_listings = pd.read_csv(filename, converters=converters)
+        all_listings = pd.read_csv(filename, converters=converters)
+       
+#       if len(all_listings) == 0:
+#             return [], 0, 0, 0
+#             print('{0} total listings'.format(len(all_listings)))
+        
+        all_listings = all_listings.rename(columns={'price':'rent', 'dt':'date', 'neighb':'neighborhood',
+                                                    'lng':'longitude', 'lat':'latitude'})
+        all_listings['rent_sqft'] = all_listings['rent'] / all_listings['sqft']
+        all_listings['date'] = pd.to_datetime(all_listings['date'], format='%Y-%m-%d')
+        all_listings['day_of_week'] = all_listings['date'].apply(lambda x: x.weekday())
+        all_listings['region'] = all_listings['url'].str.extract('http://(.*).craigslist.org', expand=False)
+        
+        full_listings = pd.DataFrame(all_listings)
 
-            if len(all_listings) == 0:
-                return [], 0, 0, 0
-                print('{0} total listings'.format(len(all_listings)))
+        cols = ['pid', 'date', 'region', 'neighborhood', 'rent', 'sqft', 'rent_sqft',
+                'longitude', 'latitude']
+        data_output = full_listings[cols]
+        fips = data_output.apply(self._get_fips, axis=1)             
+        geocoded = pd.concat([data_output, fips], axis=1)
+        return geocoded
 
-            all_listings = all_listings.rename(columns={'price':'rent', 'dt':'date', 'neighb':'neighborhood',
-                                                        'lng':'longitude', 'lat':'latitude'})
-            all_listings['rent_sqft'] = all_listings['rent'] / all_listings['sqft']
-            all_listings['date'] = pd.to_datetime(all_listings['date'], format='%Y-%m-%d')
-            all_listings['day_of_week'] = all_listings['date'].apply(lambda x: x.weekday())
-            all_listings['region'] = all_listings['url'].str.extract('http://(.*).craigslist.org', expand=False)
-            unique_listings = pd.DataFrame(all_listings.drop_duplicates(subset='pid', inplace=False))
-            thorough_listings = pd.DataFrame(unique_listings)
-            if len(thorough_listings) == 0:
-                return [], 0, 0, 0
+        
+        #unique_listings = pd.DataFrame(all_listings.drop_duplicates(subset='pid', inplace=False))
+        #thorough_listings = pd.DataFrame(unique_listings)
+        #thorough_listings = thorough_listings[thorough_listings['rent'] > 0]
+        #thorough_listings = thorough_listings[thorough_listings['sqft'] > 0]
+        #if len(thorough_listings) == 0:
+            #return [], 0, 0, 0
 
-            cols = ['pid', 'date', 'day_of_week', 'url', 'title', 'rent', 'rent_sqft', 'neighborhood', 'region', 'sqft', 'latitude', 'longitude',
-                    'accuracy', 'body_text', 'furnished', 'laundry_known', 'laundry_onpremises', 
-                    'laundry_inunit','room_known', 'private_room', 'bath_known', 'private_bath', 'parking_known', 
-                    'onsite_parking']
-            data_output = thorough_listings[cols]
-            #we are not including fips codes yet: still need to resolve missing lat-long issue (won't work with fips code function)
-            #fips = data_output.apply(self._get_fips, axis=1)             
-            #geocoded = pd.concat([data_output, fips], axis=1)
-            return data_output, len(all_listings), len(thorough_listings), len(data_output)
+        # print('{0} thorough listings'.format(len(thorough_listings)))
+        #geolocated_filtered_listings = pd.DataFrame(thorough_listings)
+        #geolocated_filtered_listings = geolocated_filtered_listings[pd.notnull(geolocated_filtered_listings['latitude'])]
+        #geolocated_filtered_listings = geolocated_filtered_listings[pd.notnull(geolocated_filtered_listings['longitude'])]
+        #cols = ['pid', 'date', 'region', 'neighborhood', 'rent', 'sqft', 'rent_sqft',
+                #'longitude', 'latitude']
+        #data_output = geolocated_filtered_listings[cols]
+
+        #fips = data_output.apply(self._get_fips, axis=1)             
+        #geocoded = pd.concat([data_output, fips], axis=1)
+
+        # print('{0} geocoded listings'.format(len(geocoded)))
+        #return geocoded, len(all_listings), len(thorough_listings), len(geocoded)
     
-    def _write_db(self, dataframe, domain):
-        '''
-        This function takes in the cleaned dataframe from the cleaning function
-        and exports it to a PostgreSQL database table.
-        '''
-        dbname = settings['dbname']
-        user = settings['user']
-        host = settings['host']
-        passwd = settings['password']
-        conn_str = "dbname={0} user={1} host={2} password={3}".format(dbname,user,host,passwd)
-        conn = psycopg2.connect(conn_str)
-        cur = conn.cursor()
-        num_listings = len(dataframe)
-        # print("Inserting {0} listings from {1} into database.".format(num_listings, domain))
-        prob_PIDs = []
-        dupes = []
-        writes = []
-        for i,row in dataframe.iterrows():
-            try:
-                cur.execute('''INSERT INTO shared_listings
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, %s, %s)''',
-                    (row['pid'],pd.to_datetime(row['date']), row['day_of_week'], row['url'],row['title'],
-                    row['rent'], row['rent_sqft'], row['neighborhood'], row['region'], row['sqft'],row['latitude'],
-                    row['longitude'],row['accuracy'],row['body_text'],
-                    row['furnished'],row['laundry_known'],row['laundry_onpremises'],
-                    row['laundry_inunit'],row['room_known'],row['private_room'],
-                    row['bath_known'],row['private_bath'],row['parking_known'],row['onsite_parking']))
-                conn.commit()
-                writes.append(row['pid'])
-
-            except Exception as e:
-                if 'duplicate key value violates unique' in str(e):
-                    dupes.append(row['pid'])
-                else:
-                    prob_PIDs.append(str(row['pid']))
-                conn.rollback()
-
-        cur.close()
-        conn.close()
-        return prob_PIDs, dupes, writes
     
+          
     def run(self, charity_proxy=True):
         
             colnames = ['pid','dt','url','title','price','neighb','sqft',
@@ -491,29 +472,43 @@ class RentalListingScraper(object):
                             logging.info('RECEIVED ERROR PAGE')       
                         s.close()
                 #print tr_skipped
-# ONCE CLEANING AND DATABASE FUNCTIONS ARE TESTED AND COMPLETE, THE FOLLOWING SECTION CAN BE BROUGHT BACK                
+                if ts_skipped == total_listings:
+                    logging.info(('{0} TIMESTAMPS NOT MATCHING' + '- CL: {1} vs. ual: {2}.' + ' NO DATA SAVED.').format(regionName,str(item_ts),str(self.latest_ts)))
+                    continue
+                    
+                    
+                #cleaned, count_listings, count_thorough, count_geocoded = self._clean_listings(fname)
+                cleaned = self._clean_listings(fname)
+                num_cleaned = len(cleaned)
+                cleaned.to_csv(self.out_dir+'cleaned.csv')
 
-#                 if ts_skipped == total_listings:
-#                     logging.info(('{0} TIMESTAMPS NOT MATCHING' + '- CL: {1} vs. ual: {2}.' + ' NO DATA SAVED.').format(regionName,str(item_ts),str(self.latest_ts)))
-#                     continue
-#                 #passing for now. When finished writing cleaning function, we will expand on this section
-#                 cleaned, count_listings, count_thorough, count_geocoded = self._clean_listings(fname)
-#                 num_cleaned = len(cleaned)
-#                 #cleaned.to_csv(OUT_DIR+"/cleaned.csv") this step doesn't seem to be working, but shouldn't be necessary.
-#                 if num_cleaned >0:
+#                 #if num_cleaned > 0:
 #                     probs, dupes, writes = self._write_db(cleaned, domain)
 #                     num_probs = len(probs)
 #                     num_dupes = len(dupes)
 #                     num_writes = len(writes)
+#                     assert num_probs + num_dupes + num_writes == num_cleaned 
 #                     pct_written = (num_writes) / num_cleaned * 100
 #                     pct_fail = round(num_probs / num_cleaned * 100,3)
+
 #                     if num_dupes == num_cleaned:
 #                         logging.info('100% OF {0} PIDS ARE DUPES. NOTHING WRITTEN'.format(str.upper(regionName)))
-                    
+
+#                     elif num_writes + num_dupes == num_cleaned:
+#                         logging.info('100% OF {0} PIDS WRITTEN.'.format(str.upper(regionName)) + 
+#                                  ' {0} scraped, {1} w/ rent/sqft, {2} w/ lat/lon, {3} dupes'.format(
+#                                     count_listings, count_thorough, count_geocoded, num_dupes))
+                
 #                     else:
 #                         logging.info('FAILED TO WRITE {0}% OF {1} PIDS:'.format(pct_fail,str.upper(regionName)) + ', '.join(probs))
-#                 else: 
-#                     #passing for now. When finished writing cleaning function, we will expand on this section
-#                     pass
+            else:
+                logging.info('NO CLEAN LISTINGS FOR {0}:'.format(str.upper(regionName)) + 
+                             ' {0} scraped, {1} w/ rent/sqft, {2} w/ lat/lon.')
+            
+#             else:
+#                 logging.info('NO CLEAN LISTINGS FOR {0}:'.format(str.upper(regionName)) + 
+#                              ' {0} scraped, {1} w/ rent/sqft, {2} w/ lat/lon.'.format(
+#                                 count_listings, count_thorough, count_geocoded))
                 
-            return
+            return   
+

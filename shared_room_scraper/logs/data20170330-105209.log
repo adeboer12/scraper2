@@ -1,0 +1,21 @@
+INFO:root:BEGINNING NEW REGION
+INFO:root:http://losangeles.craigslist.org/search/apa
+INFO:root:http://losangeles.craigslist.org/search/apa/lac/apa/6023737909.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/sgv/apa/6066788646.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/sfv/apa/6052328821.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/wst/apa/6055242569.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/lgb/apa/6023558060.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/lgb/apa/6039377069.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/sgv/apa/6066800982.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/sfv/apa/6035767621.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/wst/apa/6066800718.html
+WARNING:root:IndexError: list index out of range. Probably no beds/sqft info
+INFO:root:http://losangeles.craigslist.org/search/apa/sfv/apa/6033788537.html
