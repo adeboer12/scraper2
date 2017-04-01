@@ -385,7 +385,7 @@ http://glensfalls.craigslist.org/search/roo
 http://hudsonvalley.craigslist.org/search/roo
 http://ithaca.craigslist.org/search/roo
 http://longisland.craigslist.org/search/roo
-http://newyork.craigslist.org/search/aap
+http://newyork.craigslist.org/search/roo
 http://oneonta.craigslist.org/search/roo
 http://plattsburgh.craigslist.org/search/roo
 http://potsdam.craigslist.org/search/roo
@@ -398,7 +398,7 @@ http://hartford.craigslist.org/search/roo
 http://newhaven.craigslist.org/search/roo
 http://nwct.craigslist.org/search/roo
 http://providence.craigslist.org/search/roo
-http://boston.craigslist.org/search/aap
+http://boston.craigslist.org/search/roo
 http://capecod.craigslist.org/search/roo
 http://southcoast.craigslist.org/search/roo
 http://westernmass.craigslist.org/search/roo
