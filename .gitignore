@@ -2,3 +2,5 @@
 .DS_Store
 settings.json
 *.csv
+shared_room_scraper/sfbaymerged_unique.csv
+*.csv
