@@ -1,6 +1,7 @@
 .ipynb_checkpoints
 .DS_Store
 settings.json
+settings*
 *.csv
 shared_room_scraper/sfbaymerged_unique.csv
 *.csv
