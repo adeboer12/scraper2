@@ -1,0 +1,18 @@
+INFO:root:BEGINNING NEW REGION
+INFO:root:http://sfbay.craigslist.org/search/roo
+INFO:root:BEGINNING NEW REGION
+INFO:root:http://losangeles.craigslist.org/search/roo
+INFO:root:http://losangeles.craigslist.org/sgv/roo/6088987578.html
+INFO:root:http://sfbay.craigslist.org/sby/roo/6091378183.html
+INFO:root:http://sfbay.craigslist.org/eby/roo/6080530598.html
+INFO:root:http://sfbay.craigslist.org/nby/roo/6084343608.html
+INFO:root:http://losangeles.craigslist.org/wst/roo/6091352149.html
+INFO:root:http://sfbay.craigslist.org/nby/roo/6084354360.html
+INFO:root:http://losangeles.craigslist.org/wst/roo/6091373894.html
+INFO:root:http://sfbay.craigslist.org/nby/roo/6070412459.html
+INFO:root:http://losangeles.craigslist.org/lgb/roo/6091369451.html
+INFO:root:REACHED 5 LISTINGS
+INFO:root:FAILED TO WRITE 0.0% OF SFBAY PIDS:
+INFO:root:http://losangeles.craigslist.org/wst/roo/6091372102.html
+INFO:root:REACHED 5 LISTINGS
+INFO:root:FAILED TO WRITE 0.0% OF LOSANGELES PIDS:
