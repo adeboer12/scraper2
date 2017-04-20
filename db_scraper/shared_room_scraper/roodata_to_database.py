@@ -76,13 +76,13 @@ class RentalListingScraper(object):
         self.fname_ts = fname_ts
         self.s3_upload = s3_upload
         self.s3_bucket = s3_bucket
-        self.ts = dt.now().strftime('%Y%m%d-%H%M%S')  # Use timestamp as file id
-        #self.ts = fname_ts
+        #self.ts = dt.now().strftime('%Y%m%d-%H%M%S')  # Use timestamp as file id
+        self.ts = fname_ts
 
-        #log_fname = '/Users/briangoggin/Dropbox/Spring 2016/CP 290/Craigslist Shared Room Scrapings/Brian Scraper/logs/' + self.fname_base  + (self.ts if self.fname_ts else '') + '.log'
+
         log_fname = './logs/' + self.fname_base  + (self.ts if self.fname_ts else '') + '.log'
         
-        importlib.reload(logging)
+        #importlib.reload(logging)
         
         logging.basicConfig(filename=log_fname, level=logging.INFO)
        
@@ -443,14 +443,13 @@ class RentalListingScraper(object):
                             logging.info('NO LISTINGS RETRIEVED FOR {0}'.format(str.upper(regionName)))
 
                         total_listings += len(listings)
-                        #temporary line to test code (just grab 5 listings)
-                        i = 1
+                        #i = 1
                         for item in listings:
                             listing_num += 1
-                            if i >5:
-                                logging.info('REACHED 5 LISTINGS')
-                                regionIsComplete = True
-                                break
+                            #if i >5:
+                            #    logging.info('REACHED 5 LISTINGS')
+                            #    regionIsComplete = True
+                            #    break
                             try:
                                 row = self._parseListing(item)
                                 item_ts = dt.strptime(row[1], '%Y-%m-%d %H:%M')
@@ -479,7 +478,7 @@ class RentalListingScraper(object):
                                 row += self.PageAttributes(s, item_url)
                                 writer.writerow(row)
                                 #temporary line to test code
-                                i +=1
+                                #i +=1
                             
                             except Exception as e:
                             # Skip listing if there are problems parsing it
@@ -487,6 +486,7 @@ class RentalListingScraper(object):
                                 continue
                                    
                         next = tree.xpath('//a[@title="next page"]/@href')
+			logging.info(dt.now().strftime('%Y%m%d-%H%M%S'))
                         if len(next) > 0:
                             search_url = domain.split('/search')[0] + next[0]
                         else:
@@ -515,7 +515,8 @@ class RentalListingScraper(object):
                 else: 
                     #passing for now. When finished writing cleaning function, we will expand on this section
                     pass
-                
+
+            logging.info(dt.now().strftime('%Y%m%d-%H%M%S'))
             return   
 
 

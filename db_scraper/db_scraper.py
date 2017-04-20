@@ -25,7 +25,7 @@ sys.path
 # In[ ]:
 
 domains = []
-with open('./domains_roo_test.txt', 'r') as f:
+with open('./domains_roo.txt', 'r') as f:
     for line in f.readlines():
         domains.append((line.strip()))
         
@@ -33,7 +33,7 @@ with open('./domains_roo_test.txt', 'r') as f:
 
 # In[ ]:
 
-domains
+domains = ['http://newyork.craigslist.org/search/roo']
 
 
 # In[ ]:
